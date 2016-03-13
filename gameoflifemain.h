@@ -2,6 +2,7 @@
 #define GAMEOFLIFEMAIN_H
 
 #include <QMainWindow>
+#include "colonymap.h"
 
 namespace Ui {
 class GameOfLifeMain;
@@ -17,6 +18,7 @@ public:
 
 private:
     Ui::GameOfLifeMain *ui;
+    ColonyMap * map;
 };
 
 #endif // GAMEOFLIFEMAIN_H

@@ -13,8 +13,10 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        gameoflifemain.cpp
+        gameoflifemain.cpp \
+    colonymap.cpp
 
-HEADERS  += gameoflifemain.h
+HEADERS  += gameoflifemain.h \
+    colonymap.h
 
 FORMS    += gameoflifemain.ui
