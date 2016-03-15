@@ -10,8 +10,14 @@ class ColonyMap : public QWidget
     Q_OBJECT
 
 public:
-    explicit ColonyMap(QWidget *parent = 0, uint height = 0, uint width = 0);
+    typedef QVector<QBitArray> Map;
+    typedef QBitArray MapRow;
+
+    explicit ColonyMap(QWidget *parent = 0, int size = 30, int interval = 100);
     ~ColonyMap();
+
+    bool isRunning();
+    bool isEmpty();
 
     // events
     void mousePressEvent(QMouseEvent *e);
@@ -20,27 +26,47 @@ public:
     void timerEvent(QTimerEvent *);
 
 private:
-    uint mapHeight;
-    uint mapWidth;
+    int mapSize;
     QColor cellColor;
     QTimer *timer;
-    QVector<QBitArray> *curGenMap;
-    QVector<QBitArray> *nextGenMap;
+    Map *curGenMap;
+    Map *nextGenMap;
+    Map *visitedCells;
+    Map *originalMap;
+    Map *originalVisited;
+    bool running;
 
     void drawGrid(QPainter &canvas);
     void drawColony(QPainter &canvas);
-    void setCell(QVector<QBitArray> * map, uint row, uint col, bool val);
-    bool getCell(QVector<QBitArray> * map, uint row, uint col);
-    bool stillLive(uint row, uint col);
+    void setCell(Map *map, int row, int col, bool val);
+    bool getCell(Map *map, int row, int col);
+    bool stillLive(int row, int col);
+    bool mapEmpty(Map *map);
 
 signals:
+    void sizeChanged(int size);
+    void intervalChanged(int interval);
+    void started();
+    void stopped();
+    void gameRunning(bool);
+    void paused();
+    void unpaused();
+    void colorChanged(QColor &);
+    void mapSaved();
+    void mapLoaded();
 
 public slots:
-    void setMapHeight(uint height);
-    void setMapWidth(uint width);
+    void setMapSize(int size);
     void nextGen();
     void setInterval(int);
-
+    void gameStart();
+    void gameStop();
+    void gamePause();
+    void gameResume();
+    void gameReset();
+    void setCellColor(QColor &newColor);
+    void saveMap(QDataStream &out);
+    void loadMap(QDataStream &in);
 };
 
 #endif // COLONYMAP_H

@@ -19,6 +19,11 @@ public:
 private:
     Ui::GameOfLifeMain *ui;
     ColonyMap * map;
+
+public slots:
+    void saveMap();
+    void loadMap();
+    void setMapColor();
 };
 
 #endif // GAMEOFLIFEMAIN_H
