@@ -124,7 +124,7 @@
           <item row="0" column="2">
            <widget class="QSpinBox" name="generationTimeSpinBox">
             <property name="minimum">
-             <number>10</number>
+             <number>1</number>
             </property>
             <property name="maximum">
              <number>500</number>
@@ -137,7 +137,7 @@
           <item row="0" column="1">
            <widget class="QSlider" name="generationTimeSlider">
             <property name="minimum">
-             <number>50</number>
+             <number>1</number>
             </property>
             <property name="maximum">
              <number>500</number>
@@ -153,6 +153,13 @@
             </property>
             <property name="tickInterval">
              <number>50</number>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QCheckBox" name="brushInverseCheckBox">
+            <property name="text">
+             <string>Brush Inverts</string>
             </property>
            </widget>
           </item>
@@ -202,6 +209,13 @@
             </property>
            </widget>
           </item>
+          <item>
+           <widget class="QPushButton" name="cleanColonyButton">
+            <property name="text">
+             <string>Clean Colony</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </item>
        </layout>
@@ -215,34 +229,18 @@
  <resources/>
  <connections>
   <connection>
-   <sender>generationTimeSpinBox</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>generationTimeSlider</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>455</x>
-     <y>442</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>380</x>
-     <y>450</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>generationTimeSlider</sender>
    <signal>valueChanged(int)</signal>
    <receiver>generationTimeSpinBox</receiver>
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>347</x>
-     <y>446</y>
+     <x>430</x>
+     <y>431</y>
     </hint>
     <hint type="destinationlabel">
-     <x>461</x>
-     <y>441</y>
+     <x>482</x>
+     <y>431</y>
     </hint>
    </hints>
   </connection>
@@ -253,28 +251,12 @@
    <slot>setValue(int)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>392</x>
-     <y>491</y>
+     <x>351</x>
+     <y>460</y>
     </hint>
     <hint type="destinationlabel">
-     <x>470</x>
-     <y>490</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>colonySizeSpinBox</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>colonySizeSlider</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>457</x>
-     <y>486</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>359</x>
-     <y>492</y>
+     <x>474</x>
+     <y>476</y>
     </hint>
    </hints>
   </connection>

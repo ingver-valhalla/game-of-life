@@ -24,6 +24,7 @@ public:
     void mouseMoveEvent(QMouseEvent *e);
     void paintEvent(QPaintEvent *);
     void timerEvent(QTimerEvent *);
+    void resizeEvent(QResizeEvent *e);
 
 private:
     int mapSize;
@@ -35,6 +36,10 @@ private:
     Map *originalMap;
     Map *originalVisited;
     bool running;
+    bool brushInverts;
+    QPoint lastCell;
+    QPoint shadowCell;
+
 
     void drawGrid(QPainter &canvas);
     void drawColony(QPainter &canvas);
@@ -54,6 +59,8 @@ signals:
     void colorChanged(QColor &);
     void mapSaved();
     void mapLoaded();
+    void brushInverting(bool);
+    void mapCleaned();
 
 public slots:
     void setMapSize(int size);
@@ -67,6 +74,8 @@ public slots:
     void setCellColor(QColor &newColor);
     void saveMap(QDataStream &out);
     void loadMap(QDataStream &in);
+    void setBrushInverse(bool);
+    void cleanMap();
 };
 
 #endif // COLONYMAP_H

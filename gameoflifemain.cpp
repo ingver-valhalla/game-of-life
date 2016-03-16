@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QMessageBox>
+#include <QSizePolicy>
 
 GameOfLifeMain::GameOfLifeMain(QWidget *parent) :
     QMainWindow(parent),
@@ -18,7 +19,6 @@ GameOfLifeMain::GameOfLifeMain(QWidget *parent) :
     ui->mainLayout->setStretchFactor(ui->mapLayout, 2);
     ui->mainLayout->setStretchFactor(ui->settingsLayout, 1);
 
-
     // setting connections
 
     // connect control buttons to main slots of map
@@ -26,6 +26,7 @@ GameOfLifeMain::GameOfLifeMain(QWidget *parent) :
     connect(ui->stopButton, SIGNAL(clicked(bool)), map, SLOT(gameStop()));
     connect(ui->stepButton, SIGNAL(clicked(bool)), map, SLOT(nextGen()));
     connect(ui->resetButton, SIGNAL(clicked(bool)), map, SLOT(gameReset()));
+    connect(ui->cleanColonyButton, SIGNAL(clicked(bool)), map, SLOT(cleanMap()));
 
     // let size slider set map size
     connect(ui->colonySizeSlider, SIGNAL(valueChanged(int)), map, SLOT(setMapSize(int)));
@@ -48,6 +49,11 @@ GameOfLifeMain::GameOfLifeMain(QWidget *parent) :
     connect(ui->loadButton, SIGNAL(clicked(bool)), this, SLOT(loadMap()));
     // cell color control
     connect(ui->cellColorButton, SIGNAL(clicked(bool)), this, SLOT(setMapColor()));
+
+    connect(ui->brushInverseCheckBox, SIGNAL(toggled(bool)), map, SLOT(setBrushInverse(bool)));
+
+    connect(ui->colonySizeSpinBox, SIGNAL(editingFinished()), this, SLOT(setMapSize()));
+    connect(ui->generationTimeSpinBox, SIGNAL(editingFinished()), this, SLOT(setInterval()));
 }
 
 GameOfLifeMain::~GameOfLifeMain()
@@ -116,4 +122,14 @@ void GameOfLifeMain::setMapColor()
         return;
     map->setCellColor(newColor);
     map->gameResume();
+}
+
+void GameOfLifeMain::setMapSize()
+{
+    map->setMapSize(ui->colonySizeSpinBox->value());
+}
+
+void GameOfLifeMain::setInterval()
+{
+    map->setInterval(ui->generationTimeSpinBox->value());
 }
