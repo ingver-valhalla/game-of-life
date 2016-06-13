@@ -37,7 +37,7 @@ GameOfLifeMain::GameOfLifeMain(QWidget *parent) :
 
     // let generation time slider change time interval
     connect(ui->generationTimeSlider, SIGNAL(valueChanged(int)), map, SLOT(setInterval(int)));
-    // inform sliders, when size and tine interval changed
+    // inform sliders, when size and time interval changed
     connect(map, SIGNAL(sizeChanged(int)), ui->colonySizeSlider, SLOT(setValue(int)));
     connect(map, SIGNAL(intervalChanged(int)),ui->generationTimeSlider, SLOT(setValue(int)));
 
@@ -54,6 +54,9 @@ GameOfLifeMain::GameOfLifeMain(QWidget *parent) :
 
     connect(ui->colonySizeSpinBox, SIGNAL(editingFinished()), this, SLOT(setMapSize()));
     connect(ui->generationTimeSpinBox, SIGNAL(editingFinished()), this, SLOT(setInterval()));
+
+    // updating generation counter
+    connect(map, SIGNAL(updateGenerationCount(int)), ui->generationCountLabel, SLOT(setNum(int)));
 }
 
 GameOfLifeMain::~GameOfLifeMain()

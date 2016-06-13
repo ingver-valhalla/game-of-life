@@ -28,6 +28,8 @@ public:
 
 private:
     int mapSize;
+    int generationCount;
+    int originalGenerationCount;
     QColor cellColor;
     QTimer *timer;
     Map *curGenMap;
@@ -61,6 +63,7 @@ signals:
     void mapLoaded();
     void brushInverting(bool);
     void mapCleaned();
+    void updateGenerationCount(int);
 
 public slots:
     void setMapSize(int size);

@@ -5,6 +5,8 @@
 ColonyMap::ColonyMap(QWidget *parent, int size, int interval)
     : QWidget(parent),
       mapSize(size),
+      generationCount(0),
+      originalGenerationCount(0),
       cellColor("#002a77"),
       timer(new QTimer(this)),
       curGenMap(new Map(mapSize, MapRow(mapSize))),
@@ -348,6 +350,7 @@ void ColonyMap::nextGen()
     QVector<QBitArray> *temp = curGenMap;
     curGenMap = nextGenMap;
     nextGenMap = temp;
+    emit updateGenerationCount(++generationCount);
     update();
 }
 
@@ -404,6 +407,7 @@ void ColonyMap::gameReset()
     running = false;
     timer->stop();
     setMapSize(originalMap->size());
+    emit updateGenerationCount(generationCount = originalGenerationCount);
     *curGenMap = *originalMap;
     *visitedCells = *originalVisited;
     update();
@@ -422,11 +426,12 @@ void ColonyMap::saveMap(QDataStream &out)
     qDebug() << "ColonyMap::saveMap()";
 
     if(!mapEmpty(curGenMap)) {
-        out << *curGenMap << *visitedCells << cellColor;
+        out << *curGenMap << *visitedCells << cellColor << generationCount;
     }
 
     *originalMap = *curGenMap;
     *originalVisited = *visitedCells;
+    originalGenerationCount = generationCount;
 
     gameResume();
 }
@@ -438,10 +443,12 @@ void ColonyMap::loadMap(QDataStream &in)
     QVector<QBitArray> tempMap1;
     QVector<QBitArray> tempMap2;
     QColor tempColor;
+    int tempGenerationCount;
 
     in >> tempMap1;
     in >> tempMap2;
     in >> tempColor;
+    in >> tempGenerationCount;
 
     if(tempMap1.size() != tempMap2.size()
        || !tempColor.isValid())
@@ -460,6 +467,8 @@ void ColonyMap::loadMap(QDataStream &in)
     *visitedCells = tempMap2;
     *originalMap = *curGenMap;
     *originalVisited = *visitedCells;
+    generationCount = originalGenerationCount = tempGenerationCount;
+    emit updateGenerationCount(generationCount);
 
     update();
 }
@@ -484,5 +493,7 @@ void ColonyMap::cleanMap()
     visitedCells = new Map(mapSize, MapRow(mapSize));
     originalMap = new Map(mapSize, MapRow(mapSize));
     originalVisited = new Map(mapSize, MapRow(mapSize));
+    generationCount = originalGenerationCount = 0;
+    emit updateGenerationCount(generationCount);
     update();
 }
