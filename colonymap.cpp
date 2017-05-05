@@ -1,32 +1,35 @@
 #include "colonymap.h"
 #include <QMessageBox>
 #include <QLayout>
+#include <QColorDialog>
+#include <QFileDialog>
+#include <QMessageBox>
 
 ColonyMap::ColonyMap(QWidget *parent, int size, int interval)
     : QWidget(parent),
-      mapSize(size),
-      generationCount(0),
-      originalGenerationCount(0),
-      cellColor("#002a77"),
       timer(new QTimer(this)),
+
+      mapSize(size),
+      cellColor("#002a77"),
       curGenMap(new Map(mapSize, MapRow(mapSize))),
       nextGenMap(new Map(mapSize, MapRow(mapSize))),
       visitedCells(new Map(mapSize, MapRow(mapSize))),
+      generationCount(0),
+
       originalMap(new Map(mapSize, MapRow(mapSize))),
       originalVisited(new Map(mapSize, MapRow(mapSize))),
-      running(false),
-      brushInverts(false)
+      originalCount(0),
+
+      running(false)
 {
     timer->setInterval(interval);
-    emit sizeChanged(mapSize);
     emit intervalChanged(timer->interval());
+    emit sizeChanged(mapSize);
+    emit colorChanged(cellColor);
+    emit gameRunning(running);
+
     connect(timer, SIGNAL(timeout()), this, SLOT(nextGen()));
     setMouseTracking(true);
-
-    // setting size policy
-//    QSizePolicy newSizePolicy = sizePolicy();
-//    newSizePolicy.setHeightForWidth(true);
-//    setSizePolicy(newSizePolicy);
 }
 
 ColonyMap::~ColonyMap()
@@ -47,14 +50,17 @@ bool ColonyMap::isEmpty()
     return mapEmpty(curGenMap);
 }
 
+void ColonyMap::setGenerationCount(int newCount)
+{
+    generationCount = newCount;
+    emit generationLived(generationCount);
+}
+
 // EVENTS
 
 void ColonyMap::mousePressEvent(QMouseEvent *e)
 {
-//    qDebug() << "clicked on grid";
-
-    shadowCell = QPoint();
-    if(e->buttons() & Qt::LeftButton) {
+    if(e->buttons() | Qt::LeftButton | Qt::RightButton) {
         qreal cellHeight = (qreal)height() / mapSize;
         qreal cellWidth = (qreal)width() / mapSize;
 
@@ -62,7 +68,11 @@ void ColonyMap::mousePressEvent(QMouseEvent *e)
         int col = qFloor(e->x() / cellWidth);
         lastCell = QPoint(col, row);
 
-        setCell(curGenMap, row, col, !getCell(curGenMap, row, col));
+        if(e->buttons() & Qt::LeftButton) {
+            setCell(curGenMap, row, col, true);
+        } else if(e->buttons() & Qt::RightButton) {
+            setCell(curGenMap, row, col, false);
+        }
         update();
     }
 }
@@ -72,42 +82,30 @@ void ColonyMap::mouseMoveEvent(QMouseEvent *e)
     qreal cellHeight = (qreal)height() / mapSize;
     qreal cellWidth = (qreal)width() / mapSize;
 
-    int newRow = qFloor(e->y() / cellHeight);
-    int newCol = qFloor(e->x() / cellWidth);
+    int row = qFloor(e->y() / cellHeight);
+    int col = qFloor(e->x() / cellWidth);
 
     if(e->buttons() & Qt::LeftButton) {
-
-        if(newRow != lastCell.y() || newCol != lastCell.x()) {
-            lastCell = QPoint(newCol, newRow);
-            if(!brushInverts)
-                setCell(curGenMap, newRow, newCol, true);
-            else
-                setCell(curGenMap, newRow, newCol, !getCell(curGenMap, newRow, newCol));
+        if(row != lastCell.y() || col != lastCell.x()) {
+            lastCell = QPoint(col, row);
+            setCell(curGenMap, row, col, true);
         }
-        update();
+    }
+    else if(e->buttons() & Qt::RightButton) {
+        setCell(curGenMap, row, col, false);
     }
     else if(!running) {
-        shadowCell = QPoint(newCol, newRow);
-        update();
+        shadowCell = QPoint(col, row);
     }
+    update();
 }
 
 void ColonyMap::paintEvent(QPaintEvent *)
 {
-//    static int d = 1;
-//    qDebug() << "repainting";
     QPainter canvas(this);
-//    canvas.setWorldTransform(QTransform().translate(d,d));
-//    qDebug() << canvas.worldTransform();
-//    ++d;
+
     drawGrid(canvas);
     drawColony(canvas);
-}
-
-void ColonyMap::timerEvent(QTimerEvent *)
-{
-//    qDebug() << "step on timeout";
-    nextGen();
 }
 
 void ColonyMap::drawGrid(QPainter &canvas)
@@ -117,23 +115,15 @@ void ColonyMap::drawGrid(QPainter &canvas)
 
     QColor gridColor(cellColor);
     canvas.setPen(gridColor);
-    //    qDebug() << "ColonyMap::drawGrid: drawing borders";
-    // top
-    canvas.drawLine(0, 0, width() - 1, 0);
-    // left
-    canvas.drawLine(0, 0, 0, height()-1);
-    // right
-    canvas.drawLine(width()-1, 0, width()-1, height()-1);
-    // bottom
-    canvas.drawLine(0, height()-1, width()-1, height()-1);
+
+    canvas.drawLine(0, 0, width() - 1, 0); // top
+    canvas.drawLine(0, 0, 0, height()-1); // left
+    canvas.drawLine(width()-1, 0, width()-1, height()-1); // right
+    canvas.drawLine(0, height()-1, width()-1, height()-1); // bottom
 
     gridColor.setAlpha(10);
     canvas.setPen(gridColor);
-//    qDebug() << "gridColor.isValid():" << gridColor.isValid();
-//    qDebug() << "cellColor:" << cellColor;
-//    qDebug() << "gridColor:" << gridColor;
 
-//    qDebug() << "ColonyMap::drawGrid:drawing grid";
     for(qreal x = cellWidth; x <= width(); x += cellWidth) {
         QLineF vertLine(x, 0, x, height());
         canvas.drawLine(vertLine);
@@ -148,8 +138,6 @@ void ColonyMap::drawGrid(QPainter &canvas)
 
 void ColonyMap::drawColony(QPainter &canvas)
 {
-//    qDebug() << "drawing colony";
-
     canvas.setBrush(cellColor);
     QColor visitedColor(cellColor);
     visitedColor.setAlpha(50);
@@ -160,11 +148,15 @@ void ColonyMap::drawColony(QPainter &canvas)
     for(int row = 0; row < mapSize; ++row) {
         for(int col = 0; col < mapSize; ++col) {
             if(getCell(visitedCells, row, col)) {
-                QRectF boundary(col*cellWidth, row*cellHeight, cellWidth, cellHeight);
+                QRectF boundary(col*cellWidth, row*cellHeight,
+                                cellWidth, cellHeight);
                 canvas.fillRect(boundary, visitedColor);
             }
             if(getCell(curGenMap, row, col)) {
-                QRectF boundary(col*cellWidth, row*cellHeight, cellWidth, cellHeight);
+                QRectF boundary(
+                    col*cellWidth,
+                    row*cellHeight,
+                    cellWidth, cellHeight);
                 canvas.drawEllipse(boundary);
             }
 
@@ -174,7 +166,10 @@ void ColonyMap::drawColony(QPainter &canvas)
         QColor c = cellColor;
         c.setAlpha(100);
         canvas.setBrush(c);
-        QRectF boundary(shadowCell.x()*cellWidth, shadowCell.y()*cellHeight, cellWidth, cellHeight);
+        QRectF boundary(
+            shadowCell.x()*cellWidth,
+            shadowCell.y()*cellHeight,
+            cellWidth, cellHeight);
         canvas.drawEllipse(boundary);
         shadowCell = QPoint();
     }
@@ -190,7 +185,8 @@ void ColonyMap::resizeEvent(QResizeEvent *)
 
     int leftMargin;
     int topMargin;
-    parentWidget()->layout()->getContentsMargins(&leftMargin, &topMargin, NULL, NULL);
+    parentWidget()->layout()->getContentsMargins(
+        &leftMargin, &topMargin, NULL, NULL);
 
     if(newWidth > newHeight) {
         newWidth = newHeight;
@@ -272,7 +268,8 @@ bool ColonyMap::stillLive(int row, int col)
                          row,
                          col ? col-1 : mapSize-1);
 
-    return (neighbors == 2 && getCell(curGenMap, row, col)) || (neighbors == 3);
+    return (neighbors == 2 && getCell(curGenMap, row, col)) ||
+        (neighbors == 3);
 }
 
 bool ColonyMap::mapEmpty(Map *map)
@@ -289,16 +286,15 @@ bool ColonyMap::mapEmpty(Map *map)
 // SLOTS
 void ColonyMap::setMapSize(int size)
 {
-    emit sizeChanged(size);
     mapSize = size;
 
-    QVector<QBitArray> *t1 = curGenMap;
-    QVector<QBitArray> *t2 = nextGenMap;
-    QVector<QBitArray> *t3 = visitedCells;
+    Map *t1 = curGenMap;
+    Map *t2 = nextGenMap;
+    Map *t3 = visitedCells;
 
-    curGenMap = new QVector<QBitArray>(mapSize, QBitArray(mapSize));
-    nextGenMap = new QVector<QBitArray>(mapSize, QBitArray(mapSize));
-    visitedCells = new QVector<QBitArray>(mapSize, QBitArray(mapSize));
+    curGenMap = new Map(mapSize, MapRow(mapSize));
+    nextGenMap = new Map(mapSize, MapRow(mapSize));
+    visitedCells = new Map(mapSize, MapRow(mapSize));
 
     int minSize;
     int offset1;
@@ -315,9 +311,12 @@ void ColonyMap::setMapSize(int size)
     }
     for(int row = 0; row < minSize; ++row) {
         for(int col = 0; col < minSize; ++col) {
-            setCell(curGenMap, row + offset1, col + offset1, getCell(t1, row + offset2, col + offset2));
-            setCell(nextGenMap, row + offset1, col + offset1, getCell(t2, row + offset2, col + offset2));
-            setCell(visitedCells, row + offset1, col + offset1, getCell(t3, row + offset2, col + offset2));
+            setCell(curGenMap, row + offset1, col + offset1,
+                getCell(t1, row + offset2, col + offset2));
+            setCell(nextGenMap, row + offset1, col + offset1,
+                getCell(t2, row + offset2, col + offset2));
+            setCell(visitedCells, row + offset1, col + offset1,
+                getCell(t3, row + offset2, col + offset2));
         }
     }
 
@@ -325,46 +324,45 @@ void ColonyMap::setMapSize(int size)
     delete t2;
     delete t3;
     update();
+
+    emit sizeChanged(size);
 }
 
 void ColonyMap::nextGen()
 {
+    for(int row = 0; row < mapSize; ++row) {
+        for(int col = 0; col < mapSize; ++col) {
+            setCell(nextGenMap, row, col, stillLive(row, col));
+            if (getCell(curGenMap, row, col)) {
+                setCell(visitedCells, row, col, true);
+            }
+        }
+    }
+
     // if nothing changed since last turn
     if(*curGenMap == *nextGenMap) {
         gameStop();
         QMessageBox::information(this, "Game Over", "Game Over");
         return;
     }
-
-    for(int row = 0; row < mapSize; ++row) {
-        for(int col = 0; col < mapSize; ++col) {
-            if(getCell(curGenMap, row, col))
-                setCell(visitedCells, row, col, true);
-        }
-    }
-    for(int row = 0; row < mapSize; ++row) {
-        for(int col = 0; col < mapSize; ++col) {
-            setCell(nextGenMap, row, col, stillLive(row, col));
-        }
-    }
-    QVector<QBitArray> *temp = curGenMap;
+    Map *temp = curGenMap;
     curGenMap = nextGenMap;
     nextGenMap = temp;
-    emit updateGenerationCount(++generationCount);
     update();
+
+    setGenerationCount(generationCount + 1);
 }
 
 void ColonyMap::setInterval(int interval)
 {
     timer->setInterval(interval);
-    intervalChanged(interval);
+    emit intervalChanged(interval);
 }
 
 void ColonyMap::gameStart()
 {    
     running = true;
     if(!timer->isActive()) {
-        emit started();
         emit gameRunning(true);
         timer->start();
         setMouseTracking(false);
@@ -373,7 +371,6 @@ void ColonyMap::gameStart()
 
 void ColonyMap::gameStop()
 {
-    emit stopped();
     emit gameRunning(false);
     running = false;
     timer->stop();
@@ -383,100 +380,148 @@ void ColonyMap::gameStop()
 void ColonyMap::gamePause()
 {
     if(running) {
-        emit paused();
-        emit gameRunning(false);
+        emit gamePaused();
         timer->stop();
-        setMouseTracking(true);
     }
 }
 
 void ColonyMap::gameResume()
 {
-    if(running) {
-        emit unpaused();
-        emit gameRunning(true);
-        setMouseTracking(false);
-        if(!timer->isActive())
-            timer->start();
+    if(running && !timer->isActive()) {
+        emit gameResumed();
+        timer->start();
     }
 }
 
 void ColonyMap::gameReset()
 {
-    emit stopped();
+    emit gameRunning(false);
     running = false;
     timer->stop();
-    setMapSize(originalMap->size());
-    emit updateGenerationCount(generationCount = originalGenerationCount);
+
+    // restore original values
+    setMapSize(originalMap->size());    
     *curGenMap = *originalMap;
     *visitedCells = *originalVisited;
+
     update();
+
+    setGenerationCount(originalCount);
 }
 
-void ColonyMap::setCellColor(QColor &newColor)
-{
-    emit colorChanged(newColor);
-    cellColor = newColor;
-    update();
-}
-
-void ColonyMap::saveMap(QDataStream &out)
+void ColonyMap::chooseCellColor()
 {
     gamePause();
-    qDebug() << "ColonyMap::saveMap()";
+    QColor newColor = QColorDialog::getColor();
+    setCellColor(newColor);
+    gameResume();
+}
 
-    if(!mapEmpty(curGenMap)) {
-        out << *curGenMap << *visitedCells << cellColor << generationCount;
+void ColonyMap::setCellColor(const QColor& newColor)
+{
+    if(!newColor.isValid())
+        return;
+    cellColor = newColor;
+    update();
+
+    emit colorChanged(newColor);
+}
+
+void ColonyMap::saveMap()
+{
+   gamePause();
+    if(isEmpty()) {
+        QMessageBox::information(this, "Error", "Colony is empty");
+        gameResume();
+        return;
     }
+
+    QString fileName = QFileDialog::getSaveFileName(
+                this,
+                "Save map file",
+                QDir::homePath(),
+                "Life Map (*.lifemap);; All (*)");
+    if(fileName.isNull()) {
+        gameResume();
+        return;
+    }
+    QFile saveFile(fileName);
+    if(!saveFile.open(QIODevice::WriteOnly)) {
+        QMessageBox::information(this, "Error", "Can't open file");
+        gameResume();
+        return;
+    }
+    QDataStream out(&saveFile);
+    out << *curGenMap << *visitedCells << cellColor << generationCount;
 
     *originalMap = *curGenMap;
     *originalVisited = *visitedCells;
-    originalGenerationCount = generationCount;
+    originalCount = generationCount;
+
+    emit mapSaved();
 
     gameResume();
 }
 
-void ColonyMap::loadMap(QDataStream &in)
+void ColonyMap::loadMap()
 {
+    gamePause();
+
+    QString fileName = QFileDialog::getOpenFileName(
+                this,
+                "Open map file",
+                QDir::homePath(),
+                "Life Map (*.lifemap);; All (*)");
+    if(fileName.isNull()) {
+        gameResume();
+        return;
+    }
+    QFile loadFile(fileName);
+    if(!loadFile.open(QIODevice::ReadOnly)) {
+        QMessageBox::information(this, "Error", "Can't open file");
+        gameResume();
+        return;
+    }
+
     gameStop();
 
-    QVector<QBitArray> tempMap1;
-    QVector<QBitArray> tempMap2;
+    QDataStream in(&loadFile);
+
+    Map tempMap1;
+    Map tempMap2;
     QColor tempColor;
-    int tempGenerationCount;
+    int tempCount;
 
     in >> tempMap1;
     in >> tempMap2;
     in >> tempColor;
-    in >> tempGenerationCount;
+    in >> tempCount;
 
     if(tempMap1.size() != tempMap2.size()
-       || !tempColor.isValid())
+       || !tempColor.isValid()
+       || in.status() == QDataStream::ReadCorruptData
+       || in.status() == QDataStream::ReadPastEnd)
     {
         QMessageBox::information(this, "Error", "Map is broken");
         return;
     }
 
-    mapSize = tempMap1.size();
-    emit sizeChanged(mapSize);
-    cellColor = tempColor;
-    emit colorChanged(cellColor);
+    setMapSize(tempMap1.size());
+    setCellColor(tempColor);
     *curGenMap = tempMap1;
     delete nextGenMap;
     nextGenMap = new Map(mapSize, MapRow(mapSize));
     *visitedCells = tempMap2;
+
+    // save original values
     *originalMap = *curGenMap;
     *originalVisited = *visitedCells;
-    generationCount = originalGenerationCount = tempGenerationCount;
-    emit updateGenerationCount(generationCount);
+    originalCount = tempCount;
 
     update();
-}
+    emit mapLoaded();
 
-void ColonyMap::setBrushInverse(bool inv)
-{
-    emit brushInverting(inv);
-    brushInverts = inv;
+    setGenerationCount(tempCount);
 }
 
 void ColonyMap::cleanMap()
@@ -493,7 +538,8 @@ void ColonyMap::cleanMap()
     visitedCells = new Map(mapSize, MapRow(mapSize));
     originalMap = new Map(mapSize, MapRow(mapSize));
     originalVisited = new Map(mapSize, MapRow(mapSize));
-    generationCount = originalGenerationCount = 0;
-    emit updateGenerationCount(generationCount);
+    setGenerationCount(0);
     update();
+
+    emit mapCleaned();
 }

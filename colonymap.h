@@ -10,35 +10,42 @@ class ColonyMap : public QWidget
     Q_OBJECT
 
 public:
-    typedef QVector<QBitArray> Map;
     typedef QBitArray MapRow;
+    typedef QVector<MapRow> Map;
 
-    explicit ColonyMap(QWidget *parent = 0, int size = 30, int interval = 100);
+    explicit ColonyMap(
+        QWidget *parent = 0,
+        int size = 30,
+        int interval = 100);
     ~ColonyMap();
 
     bool isRunning();
     bool isEmpty();
+    void setGenerationCount(int);
 
+protected:
     // events
     void mousePressEvent(QMouseEvent *e);
     void mouseMoveEvent(QMouseEvent *e);
     void paintEvent(QPaintEvent *);
-    void timerEvent(QTimerEvent *);
     void resizeEvent(QResizeEvent *e);
 
-private:
-    int mapSize;
-    int generationCount;
-    int originalGenerationCount;
-    QColor cellColor;
+private:    
     QTimer *timer;
+
+    int mapSize;
+    QColor cellColor;
     Map *curGenMap;
     Map *nextGenMap;
     Map *visitedCells;
+    int generationCount;
+
+    // for storing initial values of loaded map
     Map *originalMap;
     Map *originalVisited;
+    int originalCount;
+
     bool running;
-    bool brushInverts;
     QPoint lastCell;
     QPoint shadowCell;
 
@@ -53,17 +60,16 @@ private:
 signals:
     void sizeChanged(int size);
     void intervalChanged(int interval);
-    void started();
-    void stopped();
     void gameRunning(bool);
-    void paused();
-    void unpaused();
-    void colorChanged(QColor &);
+    void gamePaused();
+    void gameResumed();
+    void colorChanged(const QColor &);
     void mapSaved();
     void mapLoaded();
     void brushInverting(bool);
+    void brushErasing(bool);
     void mapCleaned();
-    void updateGenerationCount(int);
+    void generationLived(int);
 
 public slots:
     void setMapSize(int size);
@@ -74,10 +80,10 @@ public slots:
     void gamePause();
     void gameResume();
     void gameReset();
-    void setCellColor(QColor &newColor);
-    void saveMap(QDataStream &out);
-    void loadMap(QDataStream &in);
-    void setBrushInverse(bool);
+    void chooseCellColor();
+    void setCellColor(const QColor&);
+    void saveMap();
+    void loadMap();
     void cleanMap();
 };
 

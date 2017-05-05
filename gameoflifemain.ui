@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>500</width>
-    <height>630</height>
+    <height>650</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,7 +25,7 @@
   <widget class="QWidget" name="centralWidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QVBoxLayout" name="mainLayout">
+     <layout class="QVBoxLayout" name="mainLayout" stretch="0,0">
       <property name="sizeConstraint">
        <enum>QLayout::SetFixedSize</enum>
       </property>
@@ -38,33 +38,77 @@
       </item>
       <item>
        <layout class="QVBoxLayout" name="settingsLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinimumSize</enum>
+        </property>
         <item>
          <layout class="QHBoxLayout" name="controlsLayout">
+          <property name="spacing">
+           <number>10</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
           <item>
-           <widget class="QPushButton" name="playButton">
-            <property name="text">
-             <string>Play</string>
+           <widget class="QPushButton" name="startButton">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+              <weight>50</weight>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="stopButton">
             <property name="text">
-             <string>Stop</string>
+             <string>Start</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="stepButton">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+              <weight>50</weight>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
              <string>Step</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="resetButton">
+           <widget class="QPushButton" name="stopButton">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+              <weight>50</weight>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
-             <string>Reset</string>
+             <string>Stop</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="cleanColonyButton">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Clean</string>
             </property>
            </widget>
           </item>
@@ -72,20 +116,6 @@
         </item>
         <item>
          <layout class="QGridLayout" name="sliderLayout">
-          <item row="1" column="0">
-           <widget class="QLabel" name="colonySizeLabel">
-            <property name="text">
-             <string>Colony Size</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="generationTimeLabel">
-            <property name="text">
-             <string>Generation Time (ms)</string>
-            </property>
-           </widget>
-          </item>
           <item row="1" column="1">
            <widget class="QSlider" name="colonySizeSlider">
             <property name="minimum">
@@ -105,32 +135,6 @@
             </property>
             <property name="tickInterval">
              <number>10</number>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QSpinBox" name="colonySizeSpinBox">
-            <property name="minimum">
-             <number>10</number>
-            </property>
-            <property name="maximum">
-             <number>300</number>
-            </property>
-            <property name="value">
-             <number>30</number>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QSpinBox" name="generationTimeSpinBox">
-            <property name="minimum">
-             <number>1</number>
-            </property>
-            <property name="maximum">
-             <number>500</number>
-            </property>
-            <property name="value">
-             <number>100</number>
             </property>
            </widget>
           </item>
@@ -156,27 +160,117 @@
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QCheckBox" name="brushInverseCheckBox">
+          <item row="1" column="0">
+           <widget class="QLabel" name="colonySizeLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
             <property name="text">
-             <string>Brush Inverts</string>
+             <string>Colony Size</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="generationTimeLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="text">
+             <string>Generation Time (ms)</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QSpinBox" name="generationTimeSpinBox">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>500</number>
+            </property>
+            <property name="value">
+             <number>100</number>
             </property>
            </widget>
           </item>
           <item row="2" column="2">
            <widget class="QLabel" name="generationCountLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>0</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
             </property>
            </widget>
           </item>
           <item row="2" column="1">
-           <widget class="QLabel" name="generationLabel">
+           <widget class="QLabel" name="generationLivedLabel">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
             <property name="text">
-             <string>Generations:</string>
+             <string>Generations lived:</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QSpinBox" name="colonySizeSpinBox">
+            <property name="font">
+             <font>
+              <pointsize>12</pointsize>
+             </font>
+            </property>
+            <property name="minimum">
+             <number>10</number>
+            </property>
+            <property name="maximum">
+             <number>300</number>
+            </property>
+            <property name="value">
+             <number>30</number>
             </property>
            </widget>
           </item>
@@ -184,6 +278,9 @@
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout">
+          <property name="spacing">
+           <number>10</number>
+          </property>
           <item>
            <widget class="QPushButton" name="cellColorButton">
             <property name="enabled">
@@ -194,6 +291,11 @@
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
+            </property>
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
             </property>
             <property name="text">
              <string>Cell Color</string>
@@ -208,6 +310,11 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>Save</string>
             </property>
@@ -221,15 +328,29 @@
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>Load</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="cleanColonyButton">
+           <widget class="QPushButton" name="resetButton">
+            <property name="font">
+             <font>
+              <pointsize>16</pointsize>
+              <weight>50</weight>
+              <italic>false</italic>
+              <bold>false</bold>
+              <underline>false</underline>
+             </font>
+            </property>
             <property name="text">
-             <string>Clean Colony</string>
+             <string>Reset</string>
             </property>
            </widget>
           </item>
@@ -246,22 +367,6 @@
  <resources/>
  <connections>
   <connection>
-   <sender>generationTimeSlider</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>generationTimeSpinBox</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>430</x>
-     <y>431</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>482</x>
-     <y>431</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>colonySizeSlider</sender>
    <signal>valueChanged(int)</signal>
    <receiver>colonySizeSpinBox</receiver>
@@ -272,8 +377,24 @@
      <y>460</y>
     </hint>
     <hint type="destinationlabel">
-     <x>474</x>
-     <y>476</y>
+     <x>487</x>
+     <y>461</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>generationTimeSlider</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>generationTimeSpinBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>430</x>
+     <y>431</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>487</x>
+     <y>430</y>
     </hint>
    </hints>
   </connection>
